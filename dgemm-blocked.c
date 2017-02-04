@@ -163,17 +163,14 @@ void square_dgemm (const int lda, double* restrict A, double* restrict B, double
     int t = lda % div;
     newlda = lda + (div-t);  
   }
-
-  double* padA = (double*) malloc (newlda * newlda * sizeof(double));
-  memset(padA, 0, newlda * newlda);
+  
+  double* padA = (double*) _mm_malloc(newlda * newlda * sizeof(double), 32);
   pad(padA, A, lda, newlda);
 
-  double* padB = (double*) malloc (newlda * newlda * sizeof(double));
-  memset(padB, 0, newlda * newlda);
+  double* padB = (double*) _mm_malloc(newlda * newlda * sizeof(double), 32);
   pad(padB, B, lda, newlda);
 
-  double* padC = (double*) malloc (newlda * newlda * sizeof(double));
-  memset(padC, 0, newlda * newlda);
+  double* padC = (double*) _mm_malloc(newlda * newlda * sizeof(double), 32);
   pad(padC, C, lda, newlda);
 
   /* For each block-row of A */ 

@@ -12,7 +12,8 @@
 const char* dgemm_desc = "Blocked dgemm with padding and AVX.";
 
 #if !defined(BLOCK_SIZE)
-#define BLOCK_SIZE 128
+#define BLOCK_SIZE 64
+#define BLOCK_SIZE2 64
 #endif
 
 #define min(a,b) (((a)<(b))?(a):(b))
@@ -125,17 +126,23 @@ static void do_block_unrollavx128(const int lda, const int M, const int N, const
  * where C is M-by-N, A is M-by-K, and B is K-by-N. */
 static void do_block_unrollavx256(const int lda, const int M, const int N, const int K, double* restrict A, double* restrict B, double* restrict C)
 {
-  __m256d Aik, Bkj, Bkj_1, Bkj_2, Bkj_3, Cij, Cij_1, Cij_2, Cij_3;
+  __m256d Aik, Aik_1, Bkj, Bkj_1, Bkj_2, Bkj_3, Cij, Cij_1, Cij_2, Cij_3, Cij_4, Cij_5, Cij_6, Cij_7;
 
-  for (int i = 0; i < M; i += 4) {
+  for (int i = 0; i < M; i += 8) {
     for (int j = 0; j < N; j += 4) {
       Cij = _mm256_load_pd(C+i+j*lda);
       Cij_1 = _mm256_load_pd(C+i+(j+1)*lda);
       Cij_2 = _mm256_load_pd(C+i+(j+2)*lda);
       Cij_3 = _mm256_load_pd(C+i+(j+3)*lda);
 
+      Cij_4 = _mm256_load_pd(C+i+4+j*lda);
+      Cij_5 = _mm256_load_pd(C+i+4+(j+1)*lda);
+      Cij_6 = _mm256_load_pd(C+i+4+(j+2)*lda);
+      Cij_7 = _mm256_load_pd(C+i+4+(j+3)*lda);
+
       for (int k = 0; k < K; ++k) {
         Aik = _mm256_load_pd(A+i+k*lda);
+        Aik_1 = _mm256_load_pd(A+i+4+(k)*lda);
 
         Bkj = _mm256_broadcast_sd(B+k+j*lda);
         Bkj_1 = _mm256_broadcast_sd(B+k+(j+1)*lda);
@@ -146,11 +153,22 @@ static void do_block_unrollavx256(const int lda, const int M, const int N, const
         Cij_1 = _mm256_add_pd(Cij_1, _mm256_mul_pd(Aik,Bkj_1));
         Cij_2 = _mm256_add_pd(Cij_2, _mm256_mul_pd(Aik,Bkj_2));
         Cij_3 = _mm256_add_pd(Cij_3, _mm256_mul_pd(Aik,Bkj_3));
+
+        Cij_4 = _mm256_add_pd(Cij_4, _mm256_mul_pd(Aik_1,Bkj));
+        Cij_5 = _mm256_add_pd(Cij_5, _mm256_mul_pd(Aik_1,Bkj_1));
+        Cij_6 = _mm256_add_pd(Cij_6, _mm256_mul_pd(Aik_1,Bkj_2));
+        Cij_7 = _mm256_add_pd(Cij_7, _mm256_mul_pd(Aik_1,Bkj_3));
       }
       _mm256_store_pd(C+i+j*lda, Cij);
       _mm256_store_pd(C+i+(j+1)*lda, Cij_1);
       _mm256_store_pd(C+i+(j+2)*lda, Cij_2);
       _mm256_store_pd(C+i+(j+3)*lda, Cij_3);
+
+      _mm256_store_pd(C+i+4+(j)*lda, Cij_4);
+      _mm256_store_pd(C+i+4+(j+1)*lda, Cij_5);
+      _mm256_store_pd(C+i+4+(j+2)*lda, Cij_6);
+      _mm256_store_pd(C+i+4+(j+3)*lda, Cij_7);
+
     }
   }
 
@@ -168,7 +186,7 @@ void square_dgemm (const int lda, double* restrict A, double* restrict B, double
   int MODE = 1;
 
   int newlda = lda;
-  int div = 4;
+  int div = 8;
   if (lda % div){
     int t = lda % div;
     newlda = lda + (div-t) + div;
@@ -184,7 +202,7 @@ void square_dgemm (const int lda, double* restrict A, double* restrict B, double
   pad(padC, C, lda, newlda);
 
   /* For each block-row of A */ 
-  for (int i = 0; i < newlda; i += BLOCK_SIZE)
+  for (int i = 0; i < newlda; i += BLOCK_SIZE2)
   {
     /* For each block-column of B */
     for (int j = 0; j < newlda; j += BLOCK_SIZE)
@@ -193,7 +211,7 @@ void square_dgemm (const int lda, double* restrict A, double* restrict B, double
       for (int k = 0; k < newlda; k += BLOCK_SIZE)
       {
         /* Correct block dimensions if block "goes off edge of" the matrix */
-        int M = min (BLOCK_SIZE, newlda-i);
+        int M = min (BLOCK_SIZE2, newlda-i);
         int N = min (BLOCK_SIZE, newlda-j);
         int K = min (BLOCK_SIZE, newlda-k);
         /* Perform individual block dgemm */

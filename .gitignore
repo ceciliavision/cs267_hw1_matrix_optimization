@@ -11,4 +11,5 @@
 Makefile
 
 # opt report
-*.optrpt
+*.optrp
+*.out
