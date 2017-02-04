@@ -1,0 +1,14 @@
+# Object file
+*.o
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Makefile
+Makefile
+
+# opt report
+*.optrpt

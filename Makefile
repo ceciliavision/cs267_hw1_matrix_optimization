@@ -1,12 +1,13 @@
 # on Edision we will benchmark you against the default vendor-tuned BLAS. The compiler wrappers handle all the linking. If you wish to compare with other BLAS implementations, check the NERSC documentation.
 # This makefile is intended for the GNU C compiler. To change compilers, you need to type something like: "module swap PrgEnv-pgi PrgEnv-gnu" See the NERSC documentation for available compilers.
 
+# -funroll-loops -mfpmath=sse -msse3 -march=core-avx2 
 CC = cc 
-OPT = -O3 -mavx2 -msse3 -mfpmath=sse -funroll-loops -ffast-math -ftree-vectorize
-CFLAGS = -Wall -std=gnu99 $(OPT)
+OPT = -Ofast -funroll-loops -ffast-math -opt-report
+CFLAGS = -Wall -std=gnu99 -msse -msse2 -msse3 $(OPT)
 LDFLAGS = -Wall
 # librt is needed for clock_gettime
-LDLIBS = -framework Accelerate
+LDLIBS = -lrt
 
 targets = benchmark-naive benchmark-blocked benchmark-blas benchmark-blocked-vec
 

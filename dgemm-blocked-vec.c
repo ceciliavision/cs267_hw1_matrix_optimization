@@ -12,7 +12,7 @@
 const char* dgemm_desc = "Blocked dgemm with padding and AVX.";
 
 #if !defined(BLOCK_SIZE)
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 128
 #endif
 
 #define min(a,b) (((a)<(b))?(a):(b))
@@ -168,7 +168,7 @@ void square_dgemm (const int lda, double* restrict A, double* restrict B, double
   int MODE = 1;
 
   int newlda = lda;
-  int div = 8;
+  int div = 4;
   if (lda % div){
     int t = lda % div;
     newlda = lda + (div-t) + div;
