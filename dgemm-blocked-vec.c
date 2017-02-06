@@ -171,7 +171,6 @@ static void do_block_unrollavx256(const int lda, const int M, const int N, const
 
     }
   }
-
 }
 
 /* This routine performs a dgemm operation
@@ -229,17 +228,4 @@ void square_dgemm (const int lda, double* restrict A, double* restrict B, double
 
 }
 
-
-// test mm_256 functions
-// static void test (double * A){
-//   // test for _mm256_broadcast_sd
-//   Aik = _mm256_broadcast_sd( A+10);
-//   printf("%f, %f, %f, %f\n",Aik[0],Aik[1],Aik[2], Aik[3]);
-
-//   double* CT = (double*) malloc (M * K * sizeof(double));
-//   memset(CT, 0, M * K);
-//   copyA(CT, A, M);
-//   printf("%f, %f, %f, %f\n",CT[0],CT[1],A[2], A[3]);
-
-// }
 

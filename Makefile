@@ -3,15 +3,15 @@
 
 # -funroll-loops -mfpmath=sse -msse3 -march=core-avx2 
 CC = cc 
-OPT = -Ofast -funroll-loops -ffast-math -opt-report
-CFLAGS = -Wall -std=gnu99 -msse -msse2 -msse3 $(OPT)
+OPT = -Ofast -opt-report -mfpmath=sse -funroll-loops -ftree-vectorize
+CFLAGS = -Wall -std=gnu99 $(OPT)
 LDFLAGS = -Wall
 # librt is needed for clock_gettime
 LDLIBS = -lrt
 
-targets = benchmark-naive benchmark-blocked benchmark-blas benchmark-blocked-vec
+targets = benchmark-naive benchmark-blocked benchmark-blas
 
-objects = benchmark.o dgemm-naive.o dgemm-blocked.o dgemm-blas.o dgemm-blocked-vec.o
+objects = benchmark.o dgemm-naive.o dgemm-blocked.o dgemm-blas.o
 
 .PHONY : default
 default : all
@@ -24,8 +24,6 @@ benchmark-naive : benchmark.o dgemm-naive.o
 benchmark-blocked : benchmark.o dgemm-blocked.o
 	$(CC) -o $@ $^ $(LDLIBS)
 benchmark-blas : benchmark.o dgemm-blas.o
-	$(CC) -o $@ $^ $(LDLIBS)
-benchmark-blocked-vec : benchmark.o dgemm-blocked-vec.o 
 	$(CC) -o $@ $^ $(LDLIBS)
 
 %.o : %.c

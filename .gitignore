@@ -13,3 +13,7 @@ Makefile
 # opt report
 *.optrp
 *.out
+
+# zip files
+*.zip
+*.tgz
